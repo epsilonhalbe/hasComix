@@ -22,6 +22,9 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 
+ghc-options:
+- -Wall
+
 library:
   exposed-modules:
   - Comix.Lib
@@ -45,6 +48,7 @@ executables:
     other-modules:
     - Command
     - Command.Capitalize
+    - Command.Migrate
     - Command.Smallify
     ghc-options:
     - -threaded

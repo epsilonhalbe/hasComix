@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import Lib
@@ -12,12 +10,10 @@ import Options.Applicative
 import Data.Semigroup ((<>))
 import Data.Text(Text)
 
-data Options = Options {
-    outFolder :: FilePath
-  , inFolder :: FilePath
-  , outExtension :: String
-  , appendExtension :: Bool
-} deriving (Show, Eq)
+import           Command
+import qualified Command.Capitalize  as Capitalize
+import qualified Command.Migrate     as Migrate
+import qualified Command.Smallify    as Smallify
 
 data Command = Smallify Options
   | Capitalize Options
@@ -26,6 +22,12 @@ data Command = Smallify Options
 
 main :: IO ()
 main = join $ execParser (info cmd idm)
+ where
+  cmd = hsubparser $ mconcat
+    [ Command.subcmd "capitalize" Capitalize.process Capitalize.options
+    , Command.subcmd "migrate" Migrate.process Migrate.options
+    , Command.subcmd "smallify" Smallify.process Smallify.options
+    ]
 
 
   where
