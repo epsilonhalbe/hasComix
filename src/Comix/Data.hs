@@ -20,7 +20,14 @@ import           Comix.Data.Rating
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Comic
-  <fill in stuff>
+  author    Text
+  artist    Text Maybe
+  letterer  Text Maybe
+  pages     Word Maybe
+  title     Text
+  published Day
+  publisher Text
+  rating    Rating
   deriving Show Eq
 |]
 
