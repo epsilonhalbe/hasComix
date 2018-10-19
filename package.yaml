@@ -1,10 +1,10 @@
 name:                hasComix
 version:             0.1.0.0
-github:              "githubuser/hasComix"
+github:              "epsilonhalbe/hasComix"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2018 Author name here"
+author:              "Martin Heuschober"
+maintainer:          "epsilonhalbe@gmail.com"
+copyright:           "2018 Martin Heuschober"
 
 extra-source-files:
 - README.md
@@ -23,18 +23,43 @@ dependencies:
 - base >= 4.7 && < 5
 
 library:
+  exposed-modules:
+  - Comix.Lib
+  - Comix.Data
+  - Comix.Data.Rating
+
+  - Data.Time.Orphans
   source-dirs: src
+  dependencies:
+  - bytestring
+  - cassava
+  - persistent
+  - persistent-template
+  - text
+  - time
 
 executables:
-  hasComix-exe:
+  hasComix:
     main:                Main.hs
     source-dirs:         app
+    other-modules:
+    - Command
+    - Command.Capitalize
+    - Command.Smallify
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - hasComix
+    - dhall
+    - directory
+    - extra
+    - filepath
+    - monad-logger
+    - optparse-applicative
+    - persistent-postgresql
+    - text
 
 tests:
   hasComix-test:
