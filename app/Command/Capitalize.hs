@@ -17,51 +17,50 @@ import           System.Directory
 import           System.FilePath
 
 import           Comix.Lib
+import           Command
 
-data Options = Options
-  { outFolder       :: FilePath
-  , inFolder        :: FilePath
-  , outExtension    :: String
-  , appendExtension :: Bool
-  }
-
-process :: Options -> IO ()
-process Options {..} = do
-  filePaths <- filterM doesFileExist =<< listDirectory inFolder
-  unlessM (doesDirectoryExist outFolder) (createDirectory outFolder)
-  let to f x = outFolder </> (if appendExtension then (<.>) else (-<.>)) f x
-  forM_ filePaths $ \file ->
-    T.writeFile (to file outExtension) . capitalize =<< T.readFile file
-
-options :: Parser Options
-options =
-  Options
-    <$> strOption
-          (  long "output-folder"
-          <> short 'o'
-          <> metavar "DIR"
-          <> help "Specifies the output folder."
-          <> showDefault
-          <> value "outFiles"
-          )
-    <*> strOption
-          (  long "input-folder"
-          <> short 'i'
-          <> metavar "DIR"
-          <> help "Specifies the input folder."
-          <> showDefault
-          <> value "."
-          )
-    <*> option
-          str
-          (  long "extension"
-          <> short 'e'
-          <> metavar "STRING"
-          <> help "Specifies the extension."
-          <> showDefault
-          <> value "out"
-          )
-    <*> switch
-          (long "append-extension" <> short 'a' <> help
-            "If present, the extension is appended instead of replaced."
-          )
+instance Process 'Capitalize where
+  data Options 'Capitalize = Options
+    { outFolder       :: FilePath
+    , inFolder        :: FilePath
+    , outExtension    :: String
+    , appendExtension :: Bool
+    }
+  sing = SCapitalize
+  process Options {..} = do
+    filePaths <- filterM doesFileExist =<< listDirectory inFolder
+    unlessM (doesDirectoryExist outFolder) (createDirectory outFolder)
+    let to f x = outFolder </> (if appendExtension then (<.>) else (-<.>)) f x
+    forM_ filePaths $ \file ->
+      T.writeFile (to file outExtension) . capitalize =<< T.readFile file
+  options =
+    Options
+      <$> strOption
+            (  long "output-folder"
+            <> short 'o'
+            <> metavar "DIR"
+            <> help "Specifies the output folder."
+            <> showDefault
+            <> value "outFiles"
+            )
+      <*> strOption
+            (  long "input-folder"
+            <> short 'i'
+            <> metavar "DIR"
+            <> help "Specifies the input folder."
+            <> showDefault
+            <> value "."
+            )
+      <*> option
+            str
+            (  long "extension"
+            <> short 'e'
+            <> metavar "STRING"
+            <> help "Specifies the extension."
+            <> showDefault
+            <> value "out"
+            )
+      <*> switch
+            (long "append-extension" <> short 'a' <> help
+              "If present, the extension is appended instead of replaced."
+            )

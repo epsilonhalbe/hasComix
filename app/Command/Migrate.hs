@@ -1,5 +1,9 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-# OPTIONS_GHC -fno-warn-orphans  #-}
 module Command.Migrate where
 
@@ -11,6 +15,7 @@ import           Dhall
 import           Options.Applicative
 
 import           Comix.Data
+import           Command
 
 newtype Config = Config
   { connStr :: String
@@ -18,32 +23,30 @@ newtype Config = Config
 
 instance Interpret Config
 
-data Options = Options
-  { configFile :: FilePath
-  , migrateDB :: Bool
-  }
-
-process :: Options -> IO ()
-process Options {..} = do
-  Config{..} <- input Dhall.auto $ fromString configFile
-  let migrate' = if migrateDB then runMigration else printMigration
-  runStderrLoggingT
-    $ withPostgresqlPool (fromString connStr) 10
-    $ liftIO
-    . runSqlPersistMPool (migrate' migrateAll)
-
-options :: Parser Options
-options =
-  Options
-    <$> strOption
-          (  long "config-file"
-          <> short 'c'
-          <> metavar "PATH"
-          <> help "Specifies the config file."
-          <> showDefault
-          <> value "./conf/database.conf"
-          )
-    <*> switch
-          (  long "run-migration"
-          <> help "If present, runs the migration otherwise only the SQL-migration is printed to stdout"
-          )
+instance Process 'Migrate where
+  data Options 'Migrate = Options
+    { configFile :: FilePath
+    , migrateDB :: Bool
+    }
+  sing = SMigrate
+  process Options {..} = do
+    Config{..} <- input Dhall.auto $ fromString configFile
+    let migrate' = if migrateDB then runMigration else printMigration
+    runStderrLoggingT
+      $ withPostgresqlPool (fromString connStr) 10
+      $ liftIO
+      . runSqlPersistMPool (migrate' migrateAll)
+  options =
+    Options
+      <$> strOption
+            (  long "config-file"
+            <> short 'c'
+            <> metavar "PATH"
+            <> help "Specifies the config file."
+            <> showDefault
+            <> value "./conf/database.conf"
+            )
+      <*> switch
+            (  long "run-migration"
+            <> help "If present, runs the migration otherwise only the SQL-migration is printed to stdout"
+            )
