@@ -46,8 +46,7 @@ options =
           <> showDefault
           <> value "."
           )
-    <*> option
-          str
+    <*> strOption
           (  long "extension"
           <> short 'e'
           <> metavar "STRING"

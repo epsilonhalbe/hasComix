@@ -7,7 +7,10 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-module Comix.Data where
+module Comix.Data
+  ( module Comix.Data
+  , Rating(..)
+  ) where
 
 import           Data.Csv            (FromRecord, ToRecord)
 import           Data.Text           (Text)

@@ -50,12 +50,16 @@ executables:
     - Command.Capitalize
     - Command.Migrate
     - Command.Smallify
+    - Command.ImportCsv
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - hasComix
+    - bytestring
+    - conduit
+    - conduit-extra
     - dhall
     - directory
     - extra
@@ -63,6 +67,7 @@ executables:
     - monad-logger
     - optparse-applicative
     - persistent-postgresql
+    - vector
     - text
 
 tests:

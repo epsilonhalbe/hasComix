@@ -3,9 +3,10 @@ module Command where
 import           Options.Applicative
 
 data Command
-  = Smallify
-  | Capitalize
+  = Capitalize
+
   | Migrate
+  | Smallify
   deriving Show
 
 subcmd :: String -> (a -> IO ()) -> Parser a -> Mod CommandFields (IO ())
