@@ -14,7 +14,7 @@ main = join $ execParser (info cmd idm)
  where
   cmd = hsubparser $ mconcat
     [ Command.subcmd "capitalize" Capitalize.process Capitalize.options
-    , undefined
+    , Command.subcmd "importCsv"  ImportCsv.process  ImportCsv.options
     , Command.subcmd "migrate"    Migrate.process    Migrate.options
     , Command.subcmd "smallify"   Smallify.process   Smallify.options
     ]

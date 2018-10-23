@@ -4,7 +4,7 @@ import           Options.Applicative
 
 data Command
   = Capitalize
-
+  | ImportCsv
   | Migrate
   | Smallify
   deriving Show
