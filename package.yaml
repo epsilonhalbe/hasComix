@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- cassava
 
 ghc-options:
 - -Wall
@@ -35,7 +36,6 @@ library:
   source-dirs: src
   dependencies:
   - bytestring
-  - cassava
   - persistent
   - persistent-template
   - text
@@ -75,3 +75,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hasComix
+    - hspec
+    - hspec-expectations-pretty-diff
+    - time
