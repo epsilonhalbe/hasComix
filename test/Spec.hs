@@ -22,4 +22,4 @@ main = hspec $
                       , comicPublisher = "Dark Horse Books"
                       , comicRating = VeryGood
                       }
-      in undefined
+      in decode NoHeader txt `shouldBe` Right [res]
