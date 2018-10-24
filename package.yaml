@@ -80,6 +80,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hasComix
+    - bytestring
     - hspec
     - hspec-expectations-pretty-diff
     - time
+    - text
