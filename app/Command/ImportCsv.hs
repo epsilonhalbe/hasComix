@@ -1,17 +1,26 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans  #-}
 module Command.ImportCsv where
 
 import           Control.Monad.IO.Class
-import           Data.ByteString              (ByteString)
+import           Control.Monad.Logger
+import           Control.Monad.Trans.Resource
+import           Data.ByteString.Char8        (ByteString, pack)
 import           Data.ByteString.Lazy         (fromStrict)
 import           Data.Char                    (ord)
 import           Data.Conduit                 as C
 import           Data.Conduit.Binary          as C
-import           Data.Conduit.List            as CL
 import           Data.Conduit.Combinators     as C
-import           Data.Csv                     (DecodeOptions(..), HasHeader(NoHeader), decodeWith)
+import           Data.Configurator
+import           Data.Csv                     (DecodeOptions (..),
+                                               HasHeader (NoHeader), decodeWith)
+import qualified Data.Text.Encoding           as T
 import qualified Data.Vector                  as V
+import           Database.Persist.Postgresql
+import           Database.Persist.Sql
 import           Options.Applicative
 import           System.Directory
 import           System.FilePath
@@ -22,29 +31,42 @@ data Options = Options
   { outFolder    :: FilePath
   , inFolder     :: FilePath
   , csvSeparator :: DecodeOptions
+  , configFile   :: FilePath
   }
 
 process :: Options -> IO ()
 process Options {..} = do
   putStrLn "Begin Processing"
-  x <- runConduitRes
+  cfg  <- load [Required configFile]
+  connStr <- require cfg "connStr"
+  pool :: ConnectionPool <- runNoLoggingT $ createPostgresqlPool connStr 4
+  runConduitRes
        $ C.sourceDirectory inFolder
       .| C.filterM (liftIO . doesFileExist)
       .| C.filter (isExtensionOf "csv")
       .| C.awaitForever C.sourceFile
       .| C.lines
       .| C.awaitForever (decodeWith' csvSeparator)
-      .| CL.consume
-  Prelude.print (x :: [Either String Comic])
+      .| C.awaitForever (insertWith' pool)
+      .| C.stdout
   putStrLn "End Processing"
 
-decodeWith' :: MonadIO m => DecodeOptions -> ConduitT ByteString (Either String Comic) m ()
-decodeWith' decOpts = do
-  x <- await
-  case fromStrict <$> x of
-    Nothing -> return ()
-    Just bs -> yield $
-      case decodeWith decOpts NoHeader bs of
+insertWith' :: ConnectionPool -> Either String Comic -> ConduitT (Either String Comic) ByteString ResIO ()
+insertWith' _    (Left l     ) = yield ("\tNOK: " <> pack l)
+insertWith' pool (Right comic) = do
+  ok <- liftIO _upsert -- a comic into the database, i.e. insert or update
+                         -- this needs to uniquely identify elements thus go to
+                         -- Comix.Data and add a uniqueness constraint with
+                         -- author and title
+  yield $ mconcat
+          [ "\t OK: inserted or updated ["
+          , pack $ show _the -- dbkey of an entry if succesfully inserted,
+                               -- you can get this from "ok"
+          , "] "
+          , T.encodeUtf8 _title -- of an entry, extract this from "ok"
+          , "\n"
+          ]
+
 decodeWith' :: MonadIO m => DecodeOptions -> ByteString -> ConduitT ByteString (Either String Comic) m ()
 decodeWith' decOpts bs = yield $
       case decodeWith decOpts NoHeader $ fromStrict bs of
@@ -85,5 +107,13 @@ options =
           <> showDefault
           <> value ','
           ))
+    <*> strOption
+          (  long "config-file"
+          <> short 'c'
+          <> metavar "PATH"
+          <> help "Specifies the config file."
+          <> showDefault
+          <> value "./conf/database.conf"
+          )
 
 
