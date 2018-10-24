@@ -1,34 +1,28 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans  #-}
 module Command.Migrate where
 
 import           Control.Monad.IO.Class      (liftIO)
 import           Control.Monad.Logger        (runStderrLoggingT)
-import           Data.String
+import           Data.Configurator
 import           Database.Persist.Postgresql
-import           Dhall
 import           Options.Applicative
 
 import           Comix.Data
 
-newtype Config = Config
-  { connStr :: String
-  } deriving (Generic, Show)
-
-instance Interpret Config
-
 data Options = Options
   { configFile :: FilePath
-  , migrateDB :: Bool
+  , migrateDB  :: Bool
   }
 
 process :: Options -> IO ()
 process Options {..} = do
-  Config{..} <- input Dhall.auto $ fromString configFile
+  cfg <- load [Required configFile]
+  connStr <- require cfg "connStr"
   let migrate' = if migrateDB then runMigration else printMigration
   runStderrLoggingT
-    $ withPostgresqlPool (fromString connStr) 10
+    $ withPostgresqlPool connStr 10
     $ liftIO
     . runSqlPersistMPool (migrate' migrateAll)
 

@@ -60,7 +60,7 @@ executables:
     - bytestring
     - conduit
     - conduit-extra
-    - dhall
+    - configurator
     - directory
     - extra
     - filepath
