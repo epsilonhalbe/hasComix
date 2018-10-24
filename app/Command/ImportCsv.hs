@@ -33,7 +33,7 @@ process Options {..} = do
       .| C.filter (isExtensionOf "csv")
       .| C.awaitForever C.sourceFile
       .| C.lines
-      .| decodeWith' csvSeparator
+      .| C.awaitForever (decodeWith' csvSeparator)
       .| CL.consume
   Prelude.print (x :: [Either String Comic])
   putStrLn "End Processing"
@@ -45,6 +45,9 @@ decodeWith' decOpts = do
     Nothing -> return ()
     Just bs -> yield $
       case decodeWith decOpts NoHeader bs of
+decodeWith' :: MonadIO m => DecodeOptions -> ByteString -> ConduitT ByteString (Either String Comic) m ()
+decodeWith' decOpts bs = yield $
+      case decodeWith decOpts NoHeader $ fromStrict bs of
         Right res ->
           if V.null res || V.length res > 1
             then Left $ "Unexpected result:" <> show res
