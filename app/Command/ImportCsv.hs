@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -54,18 +53,15 @@ process Options {..} = do
 insertWith' :: ConnectionPool -> Either String Comic -> ConduitT (Either String Comic) ByteString ResIO ()
 insertWith' _    (Left l     ) = yield ("\tNOK: " <> pack l)
 insertWith' pool (Right comic) = do
-  ok <- liftIO _upsert -- a comic into the database, i.e. insert or update
-                         -- this needs to uniquely identify elements thus go to
-                         -- Comix.Data and add a uniqueness constraint with
-                         -- author and title
+  ok <- liftIO $ runSqlPool (upsert comic []) pool
   yield $ mconcat
           [ "\t OK: inserted or updated ["
-          , pack $ show _the -- dbkey of an entry if succesfully inserted,
-                               -- you can get this from "ok"
+          , pack $ show $ unSqlBackendKey $ unComicKey $ entityKey ok
           , "] "
-          , T.encodeUtf8 _title -- of an entry, extract this from "ok"
+          , T.encodeUtf8 $ comicTitle $ entityVal ok
           , "\n"
           ]
+
 
 decodeWith' :: MonadIO m => DecodeOptions -> ByteString -> ConduitT ByteString (Either String Comic) m ()
 decodeWith' decOpts bs = yield $

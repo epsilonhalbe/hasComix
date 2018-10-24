@@ -32,7 +32,7 @@ Comic
   publisher Text
   rating    Rating
   deriving Show Eq
-  <put uniqueness constraint here>
+  UniqueAuthorTitle author title
 |]
 
 deriving instance Generic Comic
