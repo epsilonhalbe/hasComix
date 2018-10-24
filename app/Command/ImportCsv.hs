@@ -19,7 +19,6 @@ import           Data.Csv                     (DecodeOptions (..),
 import qualified Data.Text.Encoding           as T
 import qualified Data.Vector                  as V
 import           Database.Persist.Postgresql
-import           Database.Persist.Sql
 import           Options.Applicative
 import           System.Directory
 import           System.FilePath
