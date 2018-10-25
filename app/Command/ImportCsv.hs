@@ -51,6 +51,7 @@ process Options {..} = do
 
 insertWith' :: ConnectionPool -> Either String Comic -> ConduitT (Either String Comic) ByteString ResIO ()
 insertWith' _    (Left l     ) = yield ("\tNOK: " <> pack l)
+  where pretty = let (beg,mid) = split
 insertWith' pool (Right comic) = do
   ok <- liftIO $ runSqlPool (upsert comic []) pool
   yield $ mconcat
